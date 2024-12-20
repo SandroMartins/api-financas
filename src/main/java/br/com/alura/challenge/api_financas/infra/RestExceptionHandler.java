@@ -1,6 +1,7 @@
 package br.com.alura.challenge.api_financas.infra;
 
 import br.com.alura.challenge.api_financas.exceptions.DescricaoExisteMesException;
+import br.com.alura.challenge.api_financas.exceptions.MesIncorretoException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +31,11 @@ public class RestExceptionHandler {
     private ResponseEntity<RestErrorMessage> receitaNotFoundHandler(EntityNotFoundException ex) {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.NOT_FOUND, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
+    }
+
+    @ExceptionHandler(MesIncorretoException.class)
+    private ResponseEntity<RestErrorMessage> mesIncorretoHandler(MesIncorretoException ex) {
+        RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
     }
 }

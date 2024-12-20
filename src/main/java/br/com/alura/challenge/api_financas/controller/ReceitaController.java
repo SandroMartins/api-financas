@@ -24,14 +24,22 @@ public class ReceitaController {
     }
 
     @GetMapping
-    public Page<DadosDetalhesReceitaDTO> listar(@PageableDefault(size = 10) Pageable paginacao) {
-        return service.buscaTodasReceitas(paginacao);
+    public Page<DadosDetalhesReceitaDTO> listar(@RequestParam(value = "descricao", required = false) String descricao,
+                                                @PageableDefault(size = 10) Pageable paginacao) {
+        return service.buscaTodasReceitas(descricao, paginacao);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<DadosDetalhesReceitaDTO> detalhar(@PathVariable @NotNull Long id) {
         DadosDetalhesReceitaDTO dto = service.obterPorId(id);
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{ano}/{mes}")
+    public Page<DadosDetalhesReceitaDTO> detalharPorAnoMes(@PathVariable @NotNull int ano,
+                                                  @PathVariable @NotNull int mes,
+                                                  @PageableDefault(size = 10) Pageable paginacao) {
+        return service.obterPorAnoMes(ano, mes, paginacao);
     }
     
     @PostMapping

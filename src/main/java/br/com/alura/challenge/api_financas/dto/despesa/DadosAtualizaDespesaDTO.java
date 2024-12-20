@@ -1,5 +1,6 @@
 package br.com.alura.challenge.api_financas.dto.despesa;
 
+import br.com.alura.challenge.api_financas.model.Categoria;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,6 +17,8 @@ public record DadosAtualizaDespesaDTO(
                     BigDecimal valor,
 
                     @NotNull
-                    LocalDateTime data
+                    LocalDateTime data,
+
+                    Categoria categoria
                 ) {
 }

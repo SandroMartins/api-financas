@@ -4,6 +4,7 @@ import br.com.alura.challenge.api_financas.dto.receita.DadosAtualizaReceitaDTO;
 import br.com.alura.challenge.api_financas.dto.receita.DadosCadastroReceitaDTO;
 import br.com.alura.challenge.api_financas.dto.receita.DadosDetalhesReceitaDTO;
 import br.com.alura.challenge.api_financas.exceptions.DescricaoExisteMesException;
+import br.com.alura.challenge.api_financas.exceptions.MesIncorretoException;
 import br.com.alura.challenge.api_financas.model.Receita;
 import br.com.alura.challenge.api_financas.repository.ReceitaRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -11,6 +12,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 public class ReceitaService {
@@ -21,7 +24,10 @@ public class ReceitaService {
         this.repository = repository;
     }
 
-    public Page<DadosDetalhesReceitaDTO> buscaTodasReceitas(Pageable paginacao) {
+    public Page<DadosDetalhesReceitaDTO> buscaTodasReceitas(String descricao, Pageable paginacao) {
+        if(descricao != null && !descricao.isEmpty()) {
+            return repository.findByDescricaoContainingIgnoreCase(descricao, paginacao).map(DadosDetalhesReceitaDTO::new);
+        }
         return repository.findAll(paginacao).map(DadosDetalhesReceitaDTO::new);
     }
 
@@ -30,6 +36,17 @@ public class ReceitaService {
                 .orElseThrow(() -> new EntityNotFoundException("Receita não encontrada para o ID: " + id));
 
         return new DadosDetalhesReceitaDTO(receita);
+    }
+
+    public Page<DadosDetalhesReceitaDTO> obterPorAnoMes(@NotNull int ano, @NotNull int mes, Pageable paginacao) {
+        if (mes < 1 || mes > 12) {
+            throw new MesIncorretoException("O mês deve estar entre 1 e 12.");
+        }
+
+        LocalDateTime start = LocalDateTime.of(ano, mes, 1, 0, 0, 0); // Primeiro dia do mês à meia-noite
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1); // Último segundo do mês
+
+        return repository.findByDataBetween(start, end, paginacao).map(DadosDetalhesReceitaDTO::new);
     }
 
     public DadosDetalhesReceitaDTO novaReceita(DadosCadastroReceitaDTO dto) {

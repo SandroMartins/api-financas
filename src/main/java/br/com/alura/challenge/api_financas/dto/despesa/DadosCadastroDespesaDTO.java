@@ -1,5 +1,6 @@
 package br.com.alura.challenge.api_financas.dto.despesa;
 
+import br.com.alura.challenge.api_financas.model.Categoria;
 import br.com.alura.challenge.api_financas.model.Despesa;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -17,10 +18,12 @@ public record DadosCadastroDespesaDTO(
                     BigDecimal valor,
 
                     @NotNull
-                    LocalDateTime data
+                    LocalDateTime data,
+
+                    Categoria categoria
                 ) {
 
     public DadosCadastroDespesaDTO(Despesa despesa) {
-        this(despesa.getDescricao(), despesa.getValor(), despesa.getData());
+        this(despesa.getDescricao(), despesa.getValor(), despesa.getData(), despesa.getCategoria());
     }
 }

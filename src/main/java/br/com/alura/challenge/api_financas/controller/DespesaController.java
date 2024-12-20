@@ -24,14 +24,22 @@ public class DespesaController {
     }
 
     @GetMapping
-    public Page<DadosDetalhesDespesaDTO> listar(@PageableDefault(size = 10) Pageable paginacao) {
-        return service.buscaTodasDespesas(paginacao);
+    public Page<DadosDetalhesDespesaDTO> listar(@RequestParam(value = "descricao", required = false) String descricao,
+                                                @PageableDefault(size = 10) Pageable paginacao) {
+        return service.buscaTodasDespesas(descricao, paginacao);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<DadosDetalhesDespesaDTO> detalhar(@PathVariable @NotNull Long id) {
         DadosDetalhesDespesaDTO dto = service.obterPorId(id);
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{ano}/{mes}")
+    public Page<DadosDetalhesDespesaDTO> detalharPorAnoMes(@PathVariable @NotNull int ano,
+                                                           @PathVariable @NotNull int mes,
+                                                           @PageableDefault(size = 10) Pageable paginacao) {
+        return service.obterPorAnoMes(ano, mes, paginacao);
     }
     
     @PostMapping

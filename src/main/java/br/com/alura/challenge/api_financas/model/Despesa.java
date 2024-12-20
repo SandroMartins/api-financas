@@ -7,6 +7,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @Entity
 @Table(name = "despesas")
@@ -25,24 +26,25 @@ public class Despesa {
     @Column(nullable = false)
     private LocalDateTime data;
 
+    @Enumerated(EnumType.STRING)
+    private Categoria categoria;
+
     public Despesa() {
     }
 
-    public Despesa(Long id, String descricao, BigDecimal valor, LocalDateTime data) {
+    public Despesa(Long id, String descricao, BigDecimal valor, LocalDateTime data, Categoria categoria) {
         this.id = id;
         this.descricao = descricao;
         this.valor = valor;
         this.data = data;
+        this.categoria = categoria;
     }
 
-    public Despesa(DadosCadastroDespesaDTO dadosCadastroDespesaDTO) {
-        BeanUtils.copyProperties(dadosCadastroDespesaDTO, this);
-    }
-
-    public void atualizar(DadosAtualizaDespesaDTO dto) {
+    public Despesa(DadosCadastroDespesaDTO dto) {
         this.descricao = dto.descricao();
         this.valor = dto.valor();
         this.data = dto.data();
+        this.categoria = isCategoriaValida(dto.categoria()) ? dto.categoria() : Categoria.OUTRAS;
     }
 
     public Long getId() {
@@ -77,6 +79,14 @@ public class Despesa {
         this.data = data;
     }
 
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -88,5 +98,17 @@ public class Despesa {
     @Override
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public void atualizarDados(DadosAtualizaDespesaDTO dto) {
+        this.descricao = dto.descricao();
+        this.valor = dto.valor();
+        this.data = dto.data();
+        this.categoria = isCategoriaValida(dto.categoria()) ? dto.categoria() : Categoria.OUTRAS;
+    }
+
+    public boolean isCategoriaValida(Categoria categoria) {
+        return categoria != null && Arrays.stream(Categoria.values())
+                .anyMatch(c -> c.equals(categoria));
     }
 }

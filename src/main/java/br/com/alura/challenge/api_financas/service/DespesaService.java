@@ -4,6 +4,8 @@ import br.com.alura.challenge.api_financas.dto.despesa.DadosAtualizaDespesaDTO;
 import br.com.alura.challenge.api_financas.dto.despesa.DadosCadastroDespesaDTO;
 import br.com.alura.challenge.api_financas.dto.despesa.DadosDetalhesDespesaDTO;
 import br.com.alura.challenge.api_financas.exceptions.DescricaoExisteMesException;
+import br.com.alura.challenge.api_financas.exceptions.MesIncorretoException;
+import br.com.alura.challenge.api_financas.model.Categoria;
 import br.com.alura.challenge.api_financas.model.Despesa;
 import br.com.alura.challenge.api_financas.repository.DespesaRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -11,6 +13,9 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class DespesaService {
@@ -21,7 +26,12 @@ public class DespesaService {
         this.repository = repository;
     }
 
-    public Page<DadosDetalhesDespesaDTO> buscaTodasDespesas(Pageable paginacao) {
+    //CASO OS FILTROS AUMENTEM VERIFICAR A IMPLEMENTAÇÃO DO SPECIFICATION
+    public Page<DadosDetalhesDespesaDTO> buscaTodasDespesas(String descricao, Pageable paginacao) {
+        if(descricao != null && !descricao.isEmpty()) {
+            return repository.findByDescricaoContainingIgnoreCase(descricao, paginacao).map(DadosDetalhesDespesaDTO::new);
+        }
+
         return repository.findAll(paginacao).map(DadosDetalhesDespesaDTO::new);
     }
 
@@ -32,10 +42,22 @@ public class DespesaService {
         return new DadosDetalhesDespesaDTO(despesa);
     }
 
+    public Page<DadosDetalhesDespesaDTO> obterPorAnoMes(@NotNull int ano, @NotNull int mes, Pageable paginacao) {
+        if (mes < 1 || mes > 12) {
+            throw new MesIncorretoException("O mês deve estar entre 1 e 12.");
+        }
+
+        LocalDateTime start = LocalDateTime.of(ano, mes, 1, 0, 0, 0); // Primeiro dia do mês à meia-noite
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1); // Último segundo do mês
+
+        return repository.findByDataBetween(start, end, paginacao).map(DadosDetalhesDespesaDTO::new);
+    }
+
     public DadosDetalhesDespesaDTO novaDespesa(DadosCadastroDespesaDTO dto) {
         validaDespesaDescricaoExisteMesmoMes(dto.descricao(), dto.data().getMonthValue(), null);
 
         Despesa despesa = new Despesa(dto);
+
         repository.save(despesa);
 
         return new DadosDetalhesDespesaDTO(despesa);
@@ -46,7 +68,7 @@ public class DespesaService {
         Despesa despesa = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Despesa não encontrada para o ID: " + id));
 
-        despesa.atualizar(dto);
+        despesa.atualizarDados(dto);
 
         return new DadosDetalhesDespesaDTO(despesa);
     }
